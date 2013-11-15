@@ -47,7 +47,7 @@ module.exports = function(grunt) {
 	watch: {
 		scripts: {
 			files: ['public/sdk/sockjs.js','public/sdk/polyfill.js','public/sdk/addEvent.js',
-					'public/sdk/emitter.js' ,'public/sdk/request.js','public/sdk/addStyle.js',
+					'public/sdk/emitter.js' ,'public/sdk/request.js','public/sdk/addStyle.js', 'public/sdk/client.js',
 					'public/sdk/css.js', 'public/sdk/dom.js','public/sdk/domReady.js','public/sdk/getByClass.js',
 					'public/sdk/jsonml2.js','public/sdk/cache.js','public/sdk/embed.js','public/sdk/render.js'],
 			tasks: ['uglify', 'concat', 'wrap'],
