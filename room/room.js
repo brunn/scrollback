@@ -15,7 +15,7 @@ module.exports = function(coreObject) {
 				"`id`=values(`id`),`type`=values(`type`),`name`=values(`name`),`description`=values(`description`)"+
 				",`picture`=values(`picture`), `profile`=values(`profile`),  `owner`=values(`owner`),"+
 				"`params`=values(`params`)", [room.id, room.type, room.name || "", room.description || "",
-				room.picture || "", room.profile || "",new Date().getTime(), room.owner, JSON.stringify(room.params|| {})],
+				room.picture || "", room.profile || "",room.createdOn || new Date().getTime(), room.owner, JSON.stringify(room.params|| {})],
 			function(err, resp) {
 
 				if(err) {
@@ -39,8 +39,8 @@ module.exports = function(coreObject) {
 };
 
 function insertAccounts(data,callback){
-	var account, accountsQuery=" INSERT INTO `accounts` VALUES ", //?
-		accountValues=" (?,?,?,?) ",params=[], ids = [];
+	var account, accountsQuery=" INSERT INTO `accounts` VALUES(id, room, gateway, params, timezone) ", //?
+		accountValues=" (?,?,?,?,?) ",params=[], ids = [];
 	
 	data.accounts.forEach(function(element) {
 		var id = element.id, room = data.id, gateway;
@@ -51,7 +51,8 @@ function insertAccounts(data,callback){
 		params.push(id);
 		params.push(room);
 		params.push(gateway);
-		params.push("{}");			
+		params.push("{}"); 
+		params.push(element.timezone || 0);
 	});
 
 	console.log("originalId", data);
