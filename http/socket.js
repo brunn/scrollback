@@ -75,7 +75,7 @@ function init(data, conn) {
 					m[d[i].room]=true;
 				}
 			}
-			sess.user.membership = Object.keys(m);//Room added to user object
+			sess.user.membership = m;//Room added to user object
 			conn.send('init', {
 				sid: sess.cookie.value,
 				user: sess.user,
@@ -84,7 +84,7 @@ function init(data, conn) {
 				
 			});
 			session.set(conn.sid, sess);
-		});
+		})
 	});
 }
 
@@ -161,13 +161,9 @@ function messages (query, conn) {
 }
 
 function message (m, conn) {
-
 	if(!conn.sid) return;
-	console.log(conn.sid);
 	session.get({sid: conn.sid}, function(err, sess) {
-		var user = sess.user, tryingNick, roomName;
-		console.log(sess.sid);
-		roomName = m.to;
+		var user = sess.user, tryingNick;
 		
 		m.from = user.id;
 		m.time = new Date().getTime();
@@ -176,21 +172,11 @@ function message (m, conn) {
 		else{
 			m.origin = {gateway: "web", ip: conn.socket.remoteAddress, location:"unknown"};
 		}
-		if(!m.to && Object.keys(user.rooms).length != 0) {
-			m.to = m.to || Object.keys(user.rooms);
-		}
-		if(typeof m.to != "string" && m.to.length==0) return;
-		if(m.type == 'join'){
-			//check for user login as well
-			sess.user.membership[roomName] = true;
-			session.set(conn.sid, sess);
-		}
-		if(m.type == 'part'){
-			//check for user login as well
-			delete sess.user.membership[roomName];
-			session.set(conn.sid, sess);
-		}
+		m.to = m.to || Object.keys(user.rooms);
 		
+		if(typeof m.to != "string" && m.to.length==0)
+			return;
+
 		if (m.type == 'back') {
 			if(!userBack(user, m.to, conn)) {
 				session.set(conn.sid, sess);
@@ -218,42 +204,25 @@ function message (m, conn) {
 					log("user cannot change the nick.");
 					return;
 				}
-				if(!m.user.accounts){m.user.accounts=[];}
-				m.user.accounts[0] = user.accounts[0];
+				m.user.accounts[0] = user.accounts[0];	
 			}
 		}
 		
 		function sendMessage() {
 			core.emit("message", m, function (err, m) {
 				var i, user = sess.user;
-				if(err && err.message == "GUEST_CANNOT_HAVE_MEMBERSHIP"){
-					return conn.send('error', {id: m.id, message: err.message});
-				}
+
 				//for audience mismatch error.
 				if(err && err.message && err.message.indexOf("AUTH_FAIL")>0) {
 					return conn.send('error', {id: m.id, message: err.message});
 				}
 				if (!user || !user.id) {
 					console.log("No session user?");
+					
 					return;
 				}
 				
 				if(m && m.type && m.type == 'nick') {
-
-					//in case of logout.
-					if(/^guest-/.test(m.ref) && !/^guest-/.test(m.from)){
-						sess.user.id = m.ref;
-						sess.user.picture = "//s.gravatar.com/avatar/guestpic";
-						sess.user.accounts = [];
-						sess.user.membership = [];
-						session.set(conn.sid, sess);
-						conn.send('init', {
-							sid: sess.cookie.value,
-							user: sess.user
-						});
-						return;
-					}
-
 					if(m.user) {
 						console.log("m.user is", m.user);
 						/* 	why shallow copy? why not sess.user = m.user?
@@ -320,6 +289,7 @@ function message (m, conn) {
 }
 
 
+//not sure what ths function is used for at the time. -Harish
 function room (r, conn) {
 	var user;
 	session.get({sid: conn.sid}, function(err, sess) {
@@ -328,38 +298,22 @@ function room (r, conn) {
 			user = sess.user;
 			r.owner = user.id;
 		}
+
+		//not sure what this function does... so just replace the core.room with core.emit().
 		core.emit("room", r, function(err, data) {
-			if(err) {
-				log("ROOM ERROR", r, err);
-				data = {error:err.message}
-				data.query= {
-					queryId : r.queryId
-				}
-				conn.send('error', data);
-			}else{
-				data.query= {
-					queryId : r.queryId
-				}
-				conn.send('room', data);
-			}
 		});
 		session.set(conn.sid, sess);
 	});
 }
 
 function rooms(query, conn) {
-	console.log(query);
 	core.emit("rooms", query, function(err, data) {
 		if(err) {
 			log("ROOMS ERROR", query, err);
-			query.err = err;
-			conn.send('error',query);
+			conn.send('error', err);
 			return;
-		}else {
-			log(data);
-			conn.send('rooms', { query: query, data: data} );
-			//conn.send('rooms', data);	
 		}
+		conn.send('rooms', data);
 	});
 }
 

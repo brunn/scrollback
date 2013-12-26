@@ -1,7 +1,7 @@
 "use strict";
 
-function messageArray(initData) {
-	var messages = initData || [];
+function messageArray() {
+	var messages = [];
 	
 	function find (time, start, end) {
 		var pos;

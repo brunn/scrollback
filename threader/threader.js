@@ -26,6 +26,7 @@ module.exports = function(core) {
 		init();
 		core.on('message', function(message, callback) {
 			console.log("threader");
+			
 			if(message.type == "text" && client.writable) {//if client connected and text message
 				return core.emit('rooms', {id:message.to}, function(err, rooms) {
 					console.log("threader",rooms);
@@ -54,12 +55,12 @@ module.exports = function(core) {
 							}
 						}, 1000);	
 					}else{
-						return callback();	
+						callback();	
 					}
 					
 				});
 			}
-			return callback();
+			callback();
 		}, "modifier");
 	}
 	else{
