@@ -21,7 +21,12 @@ module.exports = function(core) {
 			if( message.text.indexOf('/')==0){
 				if(!message.text.indexOf('/me')==0){
 					return callback(new Error("UNRECOGNIZED_SLASH_COMMNAD"));
-				}  
+				} 
+			}
+		}
+		if(message.type == "join" || message.type == "part"){
+			if(/^guest-/.test(message.to)){
+				return callback(new Error("GUEST_CANNOT_HAVE_MEMBERSHIP"));
 			}
 		}
 		/*

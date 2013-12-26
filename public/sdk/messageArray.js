@@ -3,6 +3,20 @@
 function messageArray(initData) {
 	var messages = initData || [];
 	
+	function save(key) {
+		if(!window.localStorage) return;
+		window.localStorage[key] = JSON.stringify(messages);
+	}
+
+	function load(key) {
+		if(!window.localStorage) return;
+		try {
+			[].splice.apply(messages,[0,messages.length].concat(JSON.parse(window.localStorage[key] || '[]')));
+		} catch (e) {
+			[].splice.apply(messages,[0,messages.length]);
+		}
+	}
+
 	function find (time, start, end) {
 		var pos;
 
@@ -32,22 +46,25 @@ function messageArray(initData) {
 			end = find(endTime);
 		
 		while (messages[start-1] && messages[start-1].time == startTime) {
-			start--;
+			start++;
 		}
 		
 		while (messages[end] && messages[end].time == endTime) {
-			end++;
+			end--;
 		}
+
+//		console.log("Ready to merge", messages, data, start, end);
 		
-		if (messages[start-1] && messages[start-1].type != 'result-end' && data[0].type == 'result-start') {
+		if (messages[start] && messages[start].type != 'result-start' && data[0].type == 'result-end') {
 			data.shift();
 		}
 		
-		if (messages[end] && messages[end].type != 'result-start' && data[data.length-1].type == 'result-end') {
+		if (messages[end-1] && messages[end-1].type != 'result-end' && data[data.length-1].type == 'result-start') {
 			data.pop();
 		}
 		
-		[].splice.apply(messages, [start, end - start].concat(data));
+		[].splice.apply(messages, [end, start-end].concat(data));
+//		console.log("After it all, messages has", messages, this);
 	}
 	
 	function extract(time, before, after, missing) {
@@ -93,6 +110,8 @@ function messageArray(initData) {
 	messages.find = find;
 	messages.extract = extract;
 	
+	messages.load = load;
+	messages.save = save;
 	return messages;
 }
 
