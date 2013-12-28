@@ -35,7 +35,7 @@ var css = {
 		"msTransition": "all 0.2s ease-out",
 		"fontSize": "13px",
 		"lineHeight": "24px",
-		"padding": "0px 16px",
+		"padding": "8px 16px",
 		"height": "24px"
 	},
 	".scrollback-alert-hidden":{

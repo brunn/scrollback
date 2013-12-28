@@ -29,6 +29,9 @@ block styles
 			border-left: 4px solid #fff;
 			border-right: 4px solid #fff;
 		}
+		.newArchive {
+			background: #3ca; color: #fff; line-height: 40px;
+		}
 block append scripts
 	script(type='text/javascript').
 		window.scrollback = {host: '//' + location.host};
@@ -58,6 +61,8 @@ block append scripts
 	
 block content
 	.container
+		div.span12.box.newArchive
+			a.newArchive(href="/beta/#{query.to}") Switch to the new archive view (beta)
 		.box.span12.container
 			div.container
 				div.box.span8
@@ -67,7 +72,7 @@ block content
 						if user.indexOf("guest-") == 0
 							button#action.login.span12 Login
 						else
-							if membership && membership[query.to]
+							if membership && (membership.indexOf(query.to)!=-1)
 								button#archive-part.span6 Unfollow
 								button#archive-join.archive-membership-hidden.span6 Follow
 							else

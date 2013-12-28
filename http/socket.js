@@ -172,7 +172,21 @@ function message (m, conn) {
 		else{
 			m.origin = {gateway: "web", ip: conn.socket.remoteAddress, location:"unknown"};
 		}
-		m.to = m.to || Object.keys(user.rooms);
+		
+		if(!m.to && Object.keys(user.rooms).length != 0) {
+			m.to = m.to || Object.keys(user.rooms);
+		}
+		if(typeof m.to != "string" && m.to.length==0) return;
+		if(m.type == 'join'){
+			//check for user login as well
+			sess.user.membership.push(roomName);
+			session.set(conn.sid, sess);
+		}
+		if(m.type == 'part'){
+			//check for user login as well
+			sess.user.membership.splice(sess.user.membership.indexOf(roomName),1);
+			session.set(conn.sid, sess);
+		}
 		
 		if(typeof m.to != "string" && m.to.length==0)
 			return;
@@ -247,7 +261,7 @@ function message (m, conn) {
 								m[d[i].room]=true;
 							}
 						}
-						sess.user.membership = m;
+						sess.user.membership = Object.keys(m);
 						conn.send('init', {
 							sid: sess.cookie.value,
 							user: sess.user
