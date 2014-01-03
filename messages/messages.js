@@ -55,11 +55,6 @@ module.exports = function(core){
 		if(until) {
 			desc = true;
 		}
-
-		if(options.type == "text" && options.labels) {
-			where.push("`label` in (?)");
-			params.push(options.labels);
-		}
 		
 		if (indexes.length) {
 			query += " USE INDEX (`" + indexes.join("`,`") + "`)";
@@ -68,8 +63,6 @@ module.exports = function(core){
 		
 		if(where.length) query += " WHERE " + where.join(" AND ");
 		query += " ORDER BY `time` " + (desc? "DESC": "ASC");
-
-
 		//this is a hacky fix... should be changed... this need to get all the messages in db for rooms.
 		// limit: 0 will give all the messages. limit : something or limit undefined will give at max 256 msgs.
 		if(typeof options.limit == "undefined")
@@ -82,14 +75,16 @@ module.exports = function(core){
 		
 		if(desc) query = "SELECT * FROM (" + query + ") r ORDER BY `time` ASC";
 		
-		log(query, params);
+		log("query = ", query, params);
 		db.query(query, params, function(err, data) {
-			var start, end;
-
+			var start, end, ids;	
 			if(err && callback) return callback(err);
+			
+			ids = data.map(function(m) { return m.id; });
+			
 			data.forEach(function(element){
 				element.type = options.type;
-				element.labels = [element.labels];
+				element.labels = {};
 				try{
 					element.origin = JSON.parse(element.origin);
 				}
@@ -126,9 +121,26 @@ module.exports = function(core){
 					data.push({type: 'result-end', to: options.to, time: end });
 				}
 			}
-			
-			log(data.length, "results in", new Date().getTime() - startTime, "ms");
-			if(callback) callback(true, data);
+			log(data , "----" , ids );
+			if (ids.length > 0) {//room should have at least 1 message
+				db.query("SELECT * FROM message_labels WHERE message IN (?)", [ids], function(err, labels) {
+					log(err , labels);
+					if (err && callback) return callback(err);
+					
+					var msgIn = {};
+					
+					data.forEach(function(m) { if(m.id) msgIn[m.id] = m; });
+					labels.forEach(function(l) {
+						if(!msgIn[l.message].labels) msgIn[l.message].labels = {};
+						msgIn[l.message].labels[l.label] = l.score;
+					});
+					log(data.length, "results in", new Date().getTime() - startTime, "ms");
+					if(callback) callback(true, data);
+				});
+			}
+			else {
+				if(callback) callback(true, data);
+			}
 		});
 	}, "storage");
 };

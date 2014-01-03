@@ -20,10 +20,21 @@ module.exports = function(core) {
 
 		// TODO: Rewrite this to use a single INSERT query.db.
 		message.to.forEach(function(to) {
+					
+			
 			if(message.type == "text"){
+				var labels = message.labels;
+				var out  = [];
+				log("labels " , labels);
+				for (var label in labels) {
+					out.push([message.id, label , labels[label]]);
+				}
+				db.query("INSERT INTO `message_labels` (`message`, `label`, `score`) VALUES ?", [out], function(error) {
+					log("Error =" ,error);
+				});//TODO change name of column 
 				db.query("INSERT INTO `" + dbName + "` SET `id`=?, `from`=?, `to`=?, `text`=?, "+
-				"`origin`=?, `time`=?, `labels`= ?", [message.id, message.from, message.to, 
-				message.text,  JSON.stringify(message.origin), message.time, message.labels[0]]);
+				"`origin`=?, `time`=?", [message.id, message.from, message.to, 
+				message.text,  JSON.stringify(message.origin), message.time]);
 			}
 			if( message.type == "nick"){
 				db.query("INSERT INTO `" + dbName + "` SET `id`=?, `from`=?, `to`=?, "+

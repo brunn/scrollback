@@ -1,7 +1,6 @@
 function messageController($scope, $factory, $timeout, $location, $anchorScroll) {
     $scope.items = [];
     var messages = messageArray();
-        
     messages.load($scope.room.id);
     messages.merge($scope.messages.reverse());
     messages.save($scope.room.id);
@@ -192,6 +191,9 @@ scrollbackApp.directive('message',function($compile) {
                 $scope.nick = $scope.from = value.replace(/^guest-/,"");
             });
             attr.$observe('label', function(value) {
+				console.log("value " , value);
+				value = JSON.parse(value);
+				value = Object.keys(value)[0] || "";
                 if(value)$scope.bcolor = hashColor(value);
                 else $scope.bcolor = "";
             });
@@ -302,6 +304,6 @@ function format(text) {
         parts.push({type:"link", link:protocol + user + domain + path, text:r[0]});
     }
     if(text.substring(s))   parts.push({type:"text", text: text.substring(s)});
-    console.log(parts);
+    //console.log(parts);
     return parts;
 }
